@@ -22,7 +22,7 @@ for real reasoning.
 ## Quick start
 
 ```bash
-git clone https://github.com/Caplifi-Technologies/CamelotAI.git
+git clone https://github.com/CaplifiTechnologies/CamelotAI.git
 cd CamelotAI
 npm install
 npm run prisma:generate
