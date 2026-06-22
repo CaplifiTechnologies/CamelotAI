@@ -1,0 +1,18 @@
+{
+  "appId": "ai.camelot.boardroom",
+  "productName": "Camelot",
+  "files": [
+    "electron/**/*",
+    ".next/**/*",
+    "node_modules/**/*",
+    { "from": "node_modules/.prisma", "to": "node_modules/.prisma", "filter": ["**/*"] },
+    "prisma/**/*",
+    "public/**/*",
+    "package.json",
+    "next.config.js"
+  ],
+  "directories": { "output": "dist" },
+  "asar": false,
+  "mac": { "category": "public.app-category.productivity" },
+  "extraMetadata": { "main": "electron/main.js" }
+}

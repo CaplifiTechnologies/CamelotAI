@@ -1,0 +1,34 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# electron build
+/dist/
+
+# prisma / sqlite
+/prisma/dev.db
+/prisma/dev.db-journal
+*.db
+
+# env & secrets — never commit
+.env
+.env.local
+
+# misc
+.DS_Store
+*.log
+/next-env.d.ts
+*.tsbuildinfo
+
+# internal agent artifacts — not for public repo
+AGENT-SYNC-*.md
+HANDOFF-*.md
+GROK-*.md
+MASTER-PROMPT-ITERATION.md
+CamelotAI-build-log.md
+CamelotAI-post-v1-backlog.md
+camelot-*-test.md
+camelot-test-*.md

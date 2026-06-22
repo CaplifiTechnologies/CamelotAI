@@ -1,0 +1,54 @@
+// CamelotAI persistence — SQLite via Prisma (locked decision #1)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  seatKey   String
+  content   String
+  editedAt  DateTime?
+  threadId  String?
+  createdAt DateTime  @default(now())
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  description String
+  status      String   @default("open")
+  assignedTo  String?
+  result      String?
+  createdAt   DateTime @default(now())
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  topic     String
+  options   String   @default("[]") // JSON array of option strings
+  status    String   @default("open")
+  winner    String?                  // set when tallied
+  result    String?                  // tally rationale (from local model)
+  ballots   Ballot[]
+  createdAt DateTime @default(now())
+}
+
+model Ballot {
+  id         String @id @default(cuid())
+  voteId     String
+  seatKey    String
+  option     String
+  confidence String
+  vote       Vote   @relation(fields: [voteId], references: [id])
+}
+
+model Thread {
+  id          String   @id @default(cuid())
+  parentMsgId String
+  createdAt   DateTime @default(now())
+}

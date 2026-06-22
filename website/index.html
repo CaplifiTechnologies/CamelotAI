@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Camelot · The Round Table for Your AIs</title>
+<meta name="description" content="Seat Claude, Grok, and free local models at one boardroom table. Local-first routing, vote tallies, side threads, and cost guard — a desktop app for multi-agent work.">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Camelot · The Round Table for Your AIs">
+<meta property="og:description" content="Local-first multi-model boardroom. Free local agents lead; paid APIs are backup.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#09090b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090b; --panel:#18181b; --line:#3f3f46; --muted:#a1a1aa; --text:#fafafa;
+  --emerald:#10b981; --emerald-dim:#064e3b; --gold:#d4a853; --gold-dim:#3d2e14;
+  --violet:#8b5cf6; --ink:#e4e4e7;
+  --display:'Cinzel', Georgia, serif;
+  --body:'Inter', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.6}
+a{color:var(--emerald);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:#34d399}
+img,svg{max-width:100%;display:block}
+
+header{position:sticky;top:0;z-index:50;background:rgba(9,9,11,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.brand-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--emerald-dim),#0f172a);border:1px solid rgba(16,185,129,.35);display:grid;place-items:center;font-size:18px}
+.brand-name{font-family:var(--display);font-size:15px;letter-spacing:.12em;font-weight:600}
+.brand-tag{font-size:10px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-top:2px}
+.hsp{flex:1}
+.nav{display:flex;gap:4px;flex-wrap:wrap}
+.nav a{font-size:13px;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:8px;font-weight:500}
+.nav a:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.menu-btn{display:none;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text)}
+@media(max-width:820px){
+  .nav{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:rgba(9,9,11,.97);border-bottom:1px solid var(--line);padding:10px 16px 14px}
+  .nav.open{display:flex}
+  .menu-btn{display:inline-flex}
+}
+
+section{padding:56px 20px}
+.wrap{max-width:1080px;margin:0 auto}
+.narrow{max-width:640px;margin:0 auto}
+.eyebrow{font-family:var(--display);font-size:11px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin:0 0 14px}
+h1{font-family:var(--display);font-size:clamp(32px,6vw,52px);line-height:1.1;margin:0 0 18px;font-weight:700;letter-spacing:.02em}
+h2{font-family:var(--display);font-size:clamp(24px,4vw,34px);margin:0 0 12px;font-weight:600;letter-spacing:.03em}
+h3{font-size:17px;margin:0 0 8px;font-weight:600}
+.lede{font-size:18px;color:var(--muted);margin:0 0 20px;max-width:58ch}
+.sub{font-size:15px;color:var(--muted)}
+.tiny{font-size:12px;color:#71717a}
+.center{text-align:center}
+.mt{margin-top:16px}.mt24{margin-top:24px}.mt32{margin-top:32px}.mt48{margin-top:48px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:820px){.grid3,.grid2{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+.card.feature{border-color:rgba(16,185,129,.35);box-shadow:0 16px 48px rgba(0,0,0,.35)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 24px;border-radius:12px;border:1.5px solid transparent;font-weight:600;font-size:15px;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn-emerald{background:var(--emerald);color:#042f2e;box-shadow:0 8px 28px rgba(16,185,129,.25)}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--line)}
+
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;border-radius:6px;padding:4px 10px;text-transform:uppercase}
+.badge-live{background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.4)}
+.badge-beta{background:rgba(139,92,246,.12);color:#c4b5fd;border:1px solid rgba(139,92,246,.35)}
+.badge-arch{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--line)}
+
+.hero{
+  padding-top:72px;padding-bottom:56px;
+  background:
+    radial-gradient(900px 500px at 80% -10%, rgba(16,185,129,.12), transparent 60%),
+    radial-gradient(700px 420px at -5% 100%, rgba(212,168,83,.08), transparent 55%),
+    var(--bg);
+}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr}}
+
+.hero-visual{
+  aspect-ratio:4/3;border-radius:20px;border:1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(24,24,27,.9), rgba(9,9,11,.95)),
+    repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(63,63,70,.15) 48px, rgba(63,63,70,.15) 49px);
+  padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 24px 64px rgba(0,0,0,.45)
+}
+.seat-row{display:flex;gap:8px;flex-wrap:wrap}
+.seat{font-size:11px;padding:6px 10px;border-radius:20px;border:1px solid var(--line);background:#0c0c0e;color:var(--muted)}
+.seat.on{border-color:rgba(16,185,129,.5);color:#6ee7b7;background:rgba(16,185,129,.08)}
+.seat.paid{border-color:rgba(212,168,83,.4);color:var(--gold)}
+.msg{padding:10px 14px;border-radius:12px;font-size:13px;max-width:85%}
+.msg.chair{align-self:flex-end;background:#1e1b4b;border:1px solid #4338ca;color:#e0e7ff}
+.msg.ai{align-self:flex-start;background:var(--panel);border:1px solid var(--line);color:var(--ink)}
+.msg .who{font-size:10px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:700px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat{text-align:center;padding:20px 12px}
+.stat .num{font-family:var(--display);font-size:28px;color:var(--emerald);line-height:1}
+.stat .lbl{font-size:12px;color:var(--muted);margin-top:6px}
+
+.stack{position:relative;padding-left:28px}
+.stack::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,var(--emerald),var(--gold),var(--line))}
+.version{position:relative;margin-bottom:20px;padding:22px 24px 22px 28px;background:var(--panel);border:1px solid var(--line);border-radius:14px;transition:border-color .2s}
+.version:hover{border-color:rgba(16,185,129,.4)}
+.version::before{content:'';position:absolute;left:-24px;top:26px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--emerald);box-shadow:0 0 0 4px rgba(16,185,129,.15)}
+.version.current::before{background:var(--emerald);box-shadow:0 0 12px rgba(16,185,129,.5)}
+.version.archived::before{border-color:var(--muted);box-shadow:none}
+.version-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px}
+.version-head h3{margin:0;font-family:var(--display);font-size:18px;letter-spacing:.04em}
+.version-date{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.version ul{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.version li{margin:4px 0}
+.version li strong{color:var(--ink);font-weight:500}
+
+.pillars .icon{font-size:28px;margin-bottom:10px}
+.quote{font-family:var(--display);font-size:clamp(20px,3vw,26px);line-height:1.45;color:var(--ink);font-style:italic}
+.quote cite{display:block;margin-top:14px;font-family:var(--body);font-size:13px;font-style:normal;color:var(--muted)}
+
+.cta-band{
+  background:radial-gradient(ellipse at center, rgba(16,185,129,.14), transparent 70%), var(--panel);
+  border:1px solid rgba(16,185,129,.25);border-radius:20px;padding:48px 32px;text-align:center
+}
+
+.code-block{font-family:var(--mono);font-size:13px;background:#0c0c0e;border:1px solid var(--line);border-radius:10px;padding:16px;text-align:left;color:var(--ink);overflow-x:auto}
+
+footer{border-top:1px solid var(--line);padding:32px 20px 48px;color:var(--muted);font-size:13px}
+footer .links{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--text)}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="#">
+    <div class="brand-mark">⚔️</div>
+    <div>
+      <div class="brand-name">Camelot</div>
+      <div class="brand-tag">Round Table</div>
+    </div>
+  </a>
+  <div class="hsp"></div>
+  <nav class="nav" id="nav">
+    <a href="#why">Why</a>
+    <a href="#features">Features</a>
+    <a href="#stack">History</a>
+    <a href="#get">Get it</a>
+  </nav>
+  <button class="menu-btn" id="menuBtn" type="button" aria-label="Menu">Menu</button>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Multi-model boardroom</p>
+      <h1>One table for every model you run.</h1>
+      <p class="lede">
+        Camelot is a desktop boardroom where Claude, Grok, and free local models share a single transcript —
+        with votes, side threads, cost guardrails, and routing that keeps API spend optional.
+      </p>
+      <div class="row" style="justify-content:flex-start">
+        <a class="btn btn-emerald" href="#get">Get started</a>
+        <a class="btn btn-ghost" href="#stack">Version history</a>
+      </div>
+      <div class="mt32 stat-grid">
+        <div class="stat"><div class="num">5</div><div class="lbl">Major releases</div></div>
+        <div class="stat"><div class="num">⌘L</div><div class="lbl">Local Only mode</div></div>
+        <div class="stat"><div class="num">$0</div><div class="lbl">Default tally seat</div></div>
+        <div class="stat"><div class="num">MIT</div><div class="lbl">Open license</div></div>
+      </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="seat-row">
+        <span class="seat on">Local</span>
+        <span class="seat on">Qwen</span>
+        <span class="seat paid">Claude</span>
+        <span class="seat paid">Grok</span>
+        <span class="seat">Tally</span>
+      </div>
+      <div class="msg chair"><div class="who">You</div>@Claude — draft the API error handling section. Keep it under 200 words.</div>
+      <div class="msg ai"><div class="who">Claude</div>Return structured errors with HTTP status, a machine-readable code, and a human message. Log correlation IDs server-side only.</div>
+      <div class="msg ai"><div class="who">Grok</div>PASS</div>
+      <div class="msg ai"><div class="who">Tally</div>Vote (free, local): unanimous — proceed with structured errors. Confidence: high.</div>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="wrap narrow center">
+    <p class="eyebrow">The problem</p>
+    <h2>Tab-hopping is not a strategy.</h2>
+    <p class="sub">
+      Switching between chat UIs loses context, duplicates spend, and makes it hard to see who contributed what.
+      Camelot gives every model a named seat, one shared transcript, and rules that route mechanical work
+      to free local inference.
+    </p>
+  </div>
+</section>
+
+<section id="features" style="padding-top:0">
+  <div class="wrap">
+    <p class="eyebrow center">Capabilities</p>
+    <h2 class="center">Built for deliberation, not distraction</h2>
+    <div class="grid3 mt32 pillars">
+      <div class="card feature">
+        <div class="icon">🪑</div>
+        <h3>Named seats</h3>
+        <p class="sub">Claude, Grok, local Ollama models, and custom agents — role-based routing, @mentions, and PASS when a seat has nothing to add.</p>
+      </div>
+      <div class="card feature">
+        <div class="icon">🛡️</div>
+        <h3>Cost Guard</h3>
+        <p class="sub">Warn at ~10k tokens, hard-block at ~50k on paid seats. Vote tallies and aggregation always run on a free local model.</p>
+      </div>
+      <div class="card feature">
+        <div class="icon">🌿</div>
+        <h3>Local Only</h3>
+        <p class="sub">Toggle with ⌘L — route through local models only. Paid seats go dark; API keys become optional.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🗳️</div>
+        <h3>Votes + tasks</h3>
+        <p class="sub">Open votes with confidence ballots, assign tasks to seats, and keep tally narration off your API bill.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🌿</div>
+        <h3>Side threads</h3>
+        <p class="sub">Branch from any message, explore in isolation, merge back as a summary — export includes full branches.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📦</div>
+        <h3>Desktop-native</h3>
+        <p class="sub">Electron + Next.js, SQLite persistence, setup wizard, secure credential storage, and a macOS .dmg for arm64.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap narrow center">
+    <p class="quote">"Local models lead. Paid APIs are backup. You keep the last word."</p>
+    <cite>— Camelot routing principle</cite>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="wrap">
+    <p class="eyebrow center">Development history</p>
+    <h2 class="center">Version stack</h2>
+    <p class="sub center mt">Every release archived. Newest first.</p>
+
+    <div class="stack mt48">
+
+      <article class="version current" id="v022">
+        <div class="version-head">
+          <h3>v0.2.2 · Local-First</h3>
+          <span class="badge badge-live">Current</span>
+          <span class="version-date">2026-06-21</span>
+        </div>
+        <p class="sub">Local agents lead by default. Paid API seats are opt-in.</p>
+        <ul>
+          <li><strong>Local agent seat</strong> — full agent loop via HTTP, not raw chat completion</li>
+          <li><strong>Priority routing</strong> — local → fallback local → paid seats (when enabled)</li>
+          <li><strong>Setup wizard</strong> — guided onboarding for local models and optional API keys</li>
+          <li><strong>Cost visibility</strong> — per-message usage estimates and expensive-request confirmation</li>
+          <li><strong>Offline model vault</strong> — hot-tier defaults when a local model library is mounted</li>
+          <li><strong>Seat toggles</strong> — enable or disable paid seats without restarting</li>
+        </ul>
+      </article>
+
+      <article class="version" id="v021">
+        <div class="version-head">
+          <h3>v0.2.1 · Packaged</h3>
+          <span class="badge badge-beta">Shipped</span>
+          <span class="version-date">2026-06-20</span>
+        </div>
+        <p class="sub">macOS .dmg installable from Applications.</p>
+        <ul>
+          <li><strong>Embedded Next server</strong> — production smoke tests for packaged builds</li>
+          <li><strong>UserData database</strong> — SQLite in application data, not inside the app bundle</li>
+          <li><strong>Filesystem bridge hardening</strong> — path checks block symlink escape</li>
+          <li><strong>Production Electron fixes</strong> — resolves bundle path issues on install</li>
+        </ul>
+      </article>
+
+      <article class="version" id="v020">
+        <div class="version-head">
+          <h3>v0.2.0 · Round Table</h3>
+          <span class="badge badge-beta">Shipped</span>
+          <span class="version-date">2026-06-20</span>
+        </div>
+        <p class="sub">Production packaging and boardroom UX improvements.</p>
+        <ul>
+          <li><strong>Side-thread merge</strong> — summaries post as a dedicated seat</li>
+          <li><strong>Export</strong> — full side-thread sections in markdown export</li>
+          <li><strong>PASS normalization</strong> — consistent skip semantics across seats</li>
+          <li><strong>Exchange limit</strong> — caps seat-to-seat replies between your messages</li>
+          <li><strong>Filesystem bridge</strong> — scoped read/write/list in the desktop app</li>
+          <li><strong>Auth clarity</strong> — clearer token expiry and re-login messaging</li>
+        </ul>
+      </article>
+
+      <article class="version archived" id="v010">
+        <div class="version-head">
+          <h3>v0.1.0 · Foundation</h3>
+          <span class="badge badge-arch">Archived</span>
+          <span class="version-date">2026-06-19</span>
+        </div>
+        <p class="sub">First feature-complete desktop build.</p>
+        <ul>
+          <li><strong>Boardroom chat</strong> — user-driven turns, SQLite persistence</li>
+          <li><strong>Seats</strong> — Claude, Grok, local Ollama; health check per provider</li>
+          <li><strong>Votes + tasks</strong> — confidence ballots, local-only tally, task assignment</li>
+          <li><strong>Side threads</strong> — branch, isolate, merge-back</li>
+          <li><strong>Cost Guard + Local Only</strong> — spend thresholds and ⌘L routing</li>
+          <li><strong>Invite modal</strong> — seat any running Ollama model</li>
+        </ul>
+      </article>
+
+      <article class="version archived" id="spec">
+        <div class="version-head">
+          <h3>Design spec</h3>
+          <span class="badge badge-arch">Origin</span>
+          <span class="version-date">2026-06-19</span>
+        </div>
+        <p class="sub">Multi-model design session produced the locked architecture.</p>
+        <ul>
+          <li><strong>Locked decisions</strong> — persistence, routing, cost rules, app shell</li>
+          <li><strong>Feature set</strong> — orchestrator, side threads, votes, export</li>
+          <li><strong>Stack</strong> — Electron, Next.js, Tailwind, Zustand, TypeScript</li>
+        </ul>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section id="get">
+  <div class="wrap">
+    <div class="cta-band">
+      <p class="eyebrow">Get Camelot</p>
+      <h2>Run it on your Mac.</h2>
+      <p class="sub" style="max-width:52ch;margin:0 auto 24px">
+        Desktop app for macOS arm64. Requires Node 20+ and Ollama for free local seats.
+        Paid API seats are optional.
+      </p>
+      <div class="narrow">
+        <pre class="code-block">git clone https://github.com/Caplifi-Technologies/CamelotAI.git
+cd CamelotAI
+npm install
+npm run prisma:generate
+npm run prisma:push
+npm run desktop</pre>
+      </div>
+      <p class="tiny mt24">Or install the .dmg when a release is published. Stack: Electron 30 · Next.js 14 · Prisma · MIT License</p>
+      <div class="row mt24">
+        <a class="btn btn-emerald" href="https://ollama.com" rel="noopener">Get Ollama</a>
+        <a class="btn btn-ghost" href="#features">See features</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap center">
+    <div class="brand-name" style="font-family:var(--display);font-size:14px;letter-spacing:.1em">⚔️ Camelot</div>
+    <p class="tiny mt">Multi-model AI boardroom · Local-first · MIT licensed</p>
+    <div class="links">
+      <a href="#stack">Version history</a>
+      <a href="#features">Features</a>
+      <a href="https://github.com/Caplifi-Technologies/CamelotAI" rel="noopener">GitHub</a>
+      <a href="https://ollama.com" rel="noopener">Ollama</a>
+    </div>
+    <p class="tiny mt24">© 2026 CamelotAI contributors</p>
+  </div>
+</footer>
+
+<script>
+const menuBtn=document.getElementById('menuBtn');
+const nav=document.getElementById('nav');
+menuBtn?.addEventListener('click',()=>nav.classList.toggle('open'));
+</script>
+</body>
+</html>
