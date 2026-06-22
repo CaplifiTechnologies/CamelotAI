@@ -5,7 +5,7 @@ free local Ollama models at one table; route mechanical work (vote tallies,
 aggregation, side-thread summaries) to a free local model and reserve paid seats
 for real reasoning.
 
-**Product site:** [`website/index.html`](website/index.html) — version stack and feature overview.
+**Product site:** [`docs/index.html`](docs/index.html) — version stack and feature overview.
 
 ## Features (v0.2)
 
