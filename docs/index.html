@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Camelot · The Round Table for Your AIs</title>
-<meta name="description" content="Seat Claude, Grok, and free local models at one boardroom table. Local-first routing, vote tallies, side threads, and cost guard — a desktop app for multi-agent work.">
+<meta name="description" content="ALMI-powered multi-model boardroom. Odysseus leads locally; Claude Code, Grok Build, and Sakana Fugu step in for higher-demand work.">
 <link rel="canonical" href="https://camelot.caplifi.com/">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://camelot.caplifi.com/">
 <meta property="og:title" content="Camelot · The Round Table for Your AIs">
-<meta property="og:description" content="Local-first multi-model boardroom. Free local agents lead; paid APIs are backup.">
+<meta property="og:description" content="Built on ALMI. Local-first orchestration with Odysseus, Claude Code, Grok Build, and Sakana Fugu for hard calls.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#09090b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,6 +67,7 @@ h3{font-size:17px;margin:0 0 8px;font-weight:600}
 
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
 .card.feature{border-color:rgba(16,185,129,.35);box-shadow:0 16px 48px rgba(0,0,0,.35)}
+.card.violet{border-color:rgba(139,92,246,.35);background:linear-gradient(160deg,#1a1030,var(--panel))}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:12px 24px;border-radius:12px;border:1.5px solid transparent;font-weight:600;font-size:15px;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease}
 .btn:hover{transform:translateY(-1px)}
@@ -77,32 +78,34 @@ h3{font-size:17px;margin:0 0 8px;font-weight:600}
 .badge-live{background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.4)}
 .badge-beta{background:rgba(139,92,246,.12);color:#c4b5fd;border:1px solid rgba(139,92,246,.35)}
 .badge-arch{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--line)}
+.badge-guest{background:rgba(212,168,83,.12);color:var(--gold);border:1px solid rgba(212,168,83,.35)}
 
 .hero{
   padding-top:72px;padding-bottom:56px;
   background:
     radial-gradient(900px 500px at 80% -10%, rgba(16,185,129,.12), transparent 60%),
-    radial-gradient(700px 420px at -5% 100%, rgba(212,168,83,.08), transparent 55%),
+    radial-gradient(700px 420px at -5% 100%, rgba(139,92,246,.08), transparent 55%),
     var(--bg);
 }
-.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr}}
 
 .hero-visual{
-  aspect-ratio:4/3;border-radius:20px;border:1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(24,24,27,.9), rgba(9,9,11,.95)),
-    repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(63,63,70,.15) 48px, rgba(63,63,70,.15) 49px);
-  padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 24px 64px rgba(0,0,0,.45)
+  border-radius:20px;border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(24,24,27,.95), rgba(9,9,11,.98));
+  padding:18px;display:flex;flex-direction:column;gap:8px;box-shadow:0 24px 64px rgba(0,0,0,.45);
+  max-height:420px;overflow:hidden
 }
-.seat-row{display:flex;gap:8px;flex-wrap:wrap}
-.seat{font-size:11px;padding:6px 10px;border-radius:20px;border:1px solid var(--line);background:#0c0c0e;color:var(--muted)}
+.seat-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+.seat{font-size:10px;padding:5px 9px;border-radius:20px;border:1px solid var(--line);background:#0c0c0e;color:var(--muted)}
 .seat.on{border-color:rgba(16,185,129,.5);color:#6ee7b7;background:rgba(16,185,129,.08)}
 .seat.paid{border-color:rgba(212,168,83,.4);color:var(--gold)}
-.msg{padding:10px 14px;border-radius:12px;font-size:13px;max-width:85%}
+.seat.guest{border-color:rgba(139,92,246,.45);color:#c4b5fd;background:rgba(139,92,246,.08)}
+.msg{padding:9px 12px;border-radius:11px;font-size:12.5px;line-height:1.45;max-width:92%}
 .msg.chair{align-self:flex-end;background:#1e1b4b;border:1px solid #4338ca;color:#e0e7ff}
 .msg.ai{align-self:flex-start;background:var(--panel);border:1px solid var(--line);color:var(--ink)}
-.msg .who{font-size:10px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
+.msg.fugu{align-self:flex-start;background:#1a1030;border:1px solid rgba(139,92,246,.4);color:#e9d5ff}
+.msg .who{font-size:9px;color:var(--muted);margin-bottom:3px;font-family:var(--mono);letter-spacing:.04em}
 
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:700px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
@@ -110,8 +113,15 @@ h3{font-size:17px;margin:0 0 8px;font-weight:600}
 .stat .num{font-family:var(--display);font-size:28px;color:var(--emerald);line-height:1}
 .stat .lbl{font-size:12px;color:var(--muted);margin-top:6px}
 
+.roster{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:700px){.roster{grid-template-columns:1fr}}
+.roster-item{padding:18px;border-radius:14px;border:1px solid var(--line);background:#0c0c0e}
+.roster-item h4{margin:0 0 6px;font-size:15px}
+.roster-item .role{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.06em;text-transform:uppercase}
+.roster-item p{margin:8px 0 0;font-size:13px;color:var(--muted)}
+
 .stack{position:relative;padding-left:28px}
-.stack::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,var(--emerald),var(--gold),var(--line))}
+.stack::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,var(--emerald),var(--violet),var(--gold),var(--line))}
 .version{position:relative;margin-bottom:20px;padding:22px 24px 22px 28px;background:var(--panel);border:1px solid var(--line);border-radius:14px;transition:border-color .2s}
 .version:hover{border-color:rgba(16,185,129,.4)}
 .version::before{content:'';position:absolute;left:-24px;top:26px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--emerald);box-shadow:0 0 0 4px rgba(16,185,129,.15)}
@@ -132,7 +142,6 @@ h3{font-size:17px;margin:0 0 8px;font-weight:600}
   background:radial-gradient(ellipse at center, rgba(16,185,129,.14), transparent 70%), var(--panel);
   border:1px solid rgba(16,185,129,.25);border-radius:20px;padding:48px 32px;text-align:center
 }
-
 .code-block{font-family:var(--mono);font-size:13px;background:#0c0c0e;border:1px solid var(--line);border-radius:10px;padding:16px;text-align:left;color:var(--ink);overflow-x:auto}
 
 footer{border-top:1px solid var(--line);padding:32px 20px 48px;color:var(--muted);font-size:13px}
@@ -148,12 +157,12 @@ footer a:hover{color:var(--text)}
     <div class="brand-mark">⚔️</div>
     <div>
       <div class="brand-name">Camelot</div>
-      <div class="brand-tag">Round Table</div>
+      <div class="brand-tag">ALMI Council</div>
     </div>
   </a>
   <div class="hsp"></div>
   <nav class="nav" id="nav">
-    <a href="#why">Why</a>
+    <a href="#agents">Agents</a>
     <a href="#features">Features</a>
     <a href="#stack">History</a>
     <a href="#get">Get it</a>
@@ -164,85 +173,138 @@ footer a:hover{color:var(--text)}
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <p class="eyebrow">Multi-model boardroom</p>
-      <h1>One table for every model you run.</h1>
+      <p class="eyebrow">Built on ALMI</p>
+      <h1>One council. Every agent accounted for.</h1>
       <p class="lede">
-        Camelot is a desktop boardroom where Claude, Grok, and free local models share a single transcript —
-        with votes, side threads, cost guardrails, and routing that keeps API spend optional.
+        Camelot is the ALMI boardroom — a desktop round table where orchestration defaults to
+        <strong style="color:var(--text)">Odysseus</strong> locally, with
+        <strong style="color:var(--text)">Claude Code</strong> and
+        <strong style="color:var(--text)">Grok Build</strong> for frontier work, and
+        <strong style="color:var(--text)">Sakana Fugu</strong> summoned when the council needs a harder call.
       </p>
       <div class="row" style="justify-content:flex-start">
         <a class="btn btn-emerald" href="#get">Get started</a>
-        <a class="btn btn-ghost" href="#stack">Version history</a>
+        <a class="btn btn-ghost" href="#agents">Meet the council</a>
       </div>
       <div class="mt32 stat-grid">
-        <div class="stat"><div class="num">5</div><div class="lbl">Major releases</div></div>
-        <div class="stat"><div class="num">⌘L</div><div class="lbl">Local Only mode</div></div>
-        <div class="stat"><div class="num">$0</div><div class="lbl">Default tally seat</div></div>
+        <div class="stat"><div class="num">v0.3</div><div class="lbl">ALMI council</div></div>
+        <div class="stat"><div class="num">⌘L</div><div class="lbl">Local Only</div></div>
+        <div class="stat"><div class="num">@fugu</div><div class="lbl">Hard-call summon</div></div>
         <div class="stat"><div class="num">MIT</div><div class="lbl">Open license</div></div>
       </div>
     </div>
     <div class="hero-visual" aria-hidden="true">
       <div class="seat-row">
-        <span class="seat on">Local</span>
-        <span class="seat on">Qwen</span>
-        <span class="seat paid">Claude</span>
-        <span class="seat paid">Grok</span>
-        <span class="seat">Tally</span>
+        <span class="seat on">Odysseus</span>
+        <span class="seat paid">Claude Code</span>
+        <span class="seat paid">Grok Build</span>
+        <span class="seat guest">Sakana Fugu</span>
+        <span class="seat on">Tally</span>
       </div>
-      <div class="msg chair"><div class="who">You</div>@Claude — draft the API error handling section. Keep it under 200 words.</div>
-      <div class="msg ai"><div class="who">Claude</div>Return structured errors with HTTP status, a machine-readable code, and a human message. Log correlation IDs server-side only.</div>
-      <div class="msg ai"><div class="who">Grok</div>PASS</div>
-      <div class="msg ai"><div class="who">Tally</div>Vote (free, local): unanimous — proceed with structured errors. Confidence: high.</div>
+      <div class="msg chair"><div class="who">You</div>Ship rate limiting before the launch. Odysseus — scan the repo for existing middleware. @fugu — if we hit 10k rps, what breaks first?</div>
+      <div class="msg ai"><div class="who">Odysseus</div>Found token-bucket middleware at <code>src/middleware/rateLimit.ts</code> — 100 req/min per IP today. No Redis; in-memory only.</div>
+      <div class="msg ai"><div class="who">Grok Build</div>PASS — Odysseus has the file map. I'll wait for architecture before suggesting changes.</div>
+      <div class="msg ai"><div class="who">Claude Code</div>Recommend sliding-window limits + shared store before multi-instance deploy. Keep in-memory path for local dev.</div>
+      <div class="msg fugu"><div class="who">Sakana Fugu · summoned</div>At 10k rps the edge cache saturates before app CPU. Shard limits by tenant tier; add circuit breaker on upstream auth — that's your first outage, not the bucket math.</div>
+      <div class="msg ai"><div class="who">Tally · free local</div>Vote: 3–0 adopt tiered limits + Redis for prod. Confidence high. Odysseus drafts the PR; Claude reviews.</div>
     </div>
+  </div>
+</section>
+
+<section id="agents">
+  <div class="wrap">
+    <p class="eyebrow center">Default council</p>
+    <h2 class="center">Orchestration that matches the work</h2>
+    <p class="sub center mt">Routine routing stays local and cheap. Higher-demand work escalates to frontier agents — or you summon <strong style="color:var(--ink)">Sakana Fugu</strong> for the hardest council calls.</p>
+
+    <div class="roster mt32">
+      <div class="roster-item" style="border-color:rgba(16,185,129,.35)">
+        <div class="role">Primary · local</div>
+        <h4>Odysseus</h4>
+        <p>ALMI helm seat — agent loop with tools, memory, and verified filesystem access on your Mac. Default router target in Local Only mode.</p>
+      </div>
+      <div class="roster-item">
+        <div class="role">Frontier · architecture</div>
+        <h4>Claude Code</h4>
+        <p>Reasoning, writing, and orchestration. Opt-in paid seat with per-message cost visibility and expensive-request guards.</p>
+      </div>
+      <div class="roster-item">
+        <div class="role">Frontier · implementation</div>
+        <h4>Grok Build</h4>
+        <p>Web retrieval, code, and planning. Falls back automatically when another seat is offline or billing-blocked.</p>
+      </div>
+      <div class="roster-item" style="border-color:rgba(139,92,246,.35)">
+        <div class="role">Guest · summon only</div>
+        <h4>Sakana Fugu</h4>
+        <p><strong style="color:var(--ink)">Sakana Fugu</strong> — multi-agent orchestration delivered as one model. Council guest for code review, research, and multi-step reasoning. Invoke with <code>@fugu</code> or <code>@fugu-ultra</code>; never auto-routed.</p>
+      </div>
+    </div>
+
+    <p class="sub center mt24 tiny">Hidden fallback: Qwen (local Ollama) · Mechanical jobs: Local Tally (always free)</p>
   </div>
 </section>
 
 <section id="why">
   <div class="wrap narrow center">
-    <p class="eyebrow">The problem</p>
-    <h2>Tab-hopping is not a strategy.</h2>
+    <p class="eyebrow">Why Camelot</p>
+    <h2>ALMI gives you the spine. Camelot gives you the room.</h2>
     <p class="sub">
-      Switching between chat UIs loses context, duplicates spend, and makes it hard to see who contributed what.
-      Camelot gives every model a named seat, one shared transcript, and rules that route mechanical work
-      to free local inference.
+      Agent Relay, cost routing, and local-first defaults belong in infrastructure — not in another browser tab.
+      Camelot sits on the ALMI stack: one SQLite transcript, named seats, PASS semantics, and rules that keep
+      vote tallies and formatting on free local inference.
     </p>
   </div>
 </section>
 
 <section id="features" style="padding-top:0">
   <div class="wrap">
-    <p class="eyebrow center">Capabilities</p>
-    <h2 class="center">Built for deliberation, not distraction</h2>
+    <p class="eyebrow center">Highlights</p>
+    <h2 class="center">What ships in the council build</h2>
     <div class="grid3 mt32 pillars">
       <div class="card feature">
-        <div class="icon">🪑</div>
-        <h3>Named seats</h3>
-        <p class="sub">Claude, Grok, local Ollama models, and custom agents — role-based routing, @mentions, and PASS when a seat has nothing to add.</p>
+        <div class="icon">🧭</div>
+        <h3>Smart routing</h3>
+        <p class="sub">Role-based orchestration with @mentions, PASS when irrelevant, and automatic fallback chains when a seat fails or hits billing limits.</p>
       </div>
       <div class="card feature">
         <div class="icon">🛡️</div>
         <h3>Cost Guard</h3>
-        <p class="sub">Warn at ~10k tokens, hard-block at ~50k on paid seats. Vote tallies and aggregation always run on a free local model.</p>
+        <p class="sub">Warn at ~10k tokens, block at ~50k on paid seats. Usage chips on every reply. Expensive-request confirmation before large frontier calls.</p>
       </div>
       <div class="card feature">
         <div class="icon">🌿</div>
-        <h3>Local Only</h3>
-        <p class="sub">Toggle with ⌘L — route through local models only. Paid seats go dark; API keys become optional.</p>
+        <h3>Local Only ⌘L</h3>
+        <p class="sub">Odysseus + local Ollama only — paid seats go dark, API keys optional, Cost Guard suspended for zero-spend sessions.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔧</div>
+        <h3>Agent tools</h3>
+        <p class="sub">Toggle filesystem tools for capable seats — scoped read/write/list via Electron fs-bridge. Odysseus runs the full local agent loop.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📜</div>
+        <h3>Odysseus instructions</h3>
+        <p class="sub">Editable standing orders injected at session start — tune tone, priorities, and boardroom behavior without rebuilding the app.</p>
+      </div>
+      <div class="card violet">
+        <div class="icon">🐡</div>
+        <h3>Sakana Fugu missions</h3>
+        <p class="sub">Optional Responses API path for Fugu Ultra — streaming, web search, and long-running agentic turns (feature-flagged, off by default).</p>
       </div>
       <div class="card">
         <div class="icon">🗳️</div>
         <h3>Votes + tasks</h3>
-        <p class="sub">Open votes with confidence ballots, assign tasks to seats, and keep tally narration off your API bill.</p>
+        <p class="sub">Confidence-weighted ballots with deterministic counts; narration on a free local model. Task panel with seat assignment and status.</p>
       </div>
       <div class="card">
         <div class="icon">🌿</div>
         <h3>Side threads</h3>
-        <p class="sub">Branch from any message, explore in isolation, merge back as a summary — export includes full branches.</p>
+        <p class="sub">Branch from any message, explore in isolation, merge back as a Side Thread summary. Markdown export includes full branches.</p>
       </div>
       <div class="card">
-        <div class="icon">📦</div>
-        <h3>Desktop-native</h3>
-        <p class="sub">Electron + Next.js, SQLite persistence, setup wizard, secure credential storage, and a macOS .dmg for arm64.</p>
+        <div class="icon">⚙️</div>
+        <h3>Setup wizard</h3>
+        <p class="sub">Four-step onboarding: welcome → local Ollama model → optional API keys in Keychain → guided Q&amp;A with your downloaded model.</p>
       </div>
     </div>
   </div>
@@ -250,8 +312,8 @@ footer a:hover{color:var(--text)}
 
 <section>
   <div class="wrap narrow center">
-    <p class="quote">"Local models lead. Paid APIs are backup. You keep the last word."</p>
-    <cite>— Camelot routing principle</cite>
+    <p class="quote">"Odysseus leads locally. Claude Code and Grok Build handle frontier demand. Sakana Fugu answers when you summon it."</p>
+    <cite>— Camelot council routing</cite>
   </div>
 </section>
 
@@ -259,24 +321,39 @@ footer a:hover{color:var(--text)}
   <div class="wrap">
     <p class="eyebrow center">Development history</p>
     <h2 class="center">Version stack</h2>
-    <p class="sub center mt">Every release archived. Newest first.</p>
+    <p class="sub center mt">Newest first.</p>
 
     <div class="stack mt48">
 
-      <article class="version current" id="v022">
+      <article class="version current" id="v030">
+        <div class="version-head">
+          <h3>v0.3.0 · ALMI Council</h3>
+          <span class="badge badge-live">Current</span>
+          <span class="version-date">2026-06-22</span>
+        </div>
+        <p class="sub">Built on ALMI — council defaults and Sakana Fugu guest seats.</p>
+        <ul>
+          <li><strong>ALMI integration</strong> — boardroom as the multi-agent surface on the local-first spine</li>
+          <li><strong>Odysseus primary</strong> — default orchestration target; local agent loop with tools + memory</li>
+          <li><strong>Claude Code + Grok Build</strong> — frontier seats for architecture and implementation (opt-in)</li>
+          <li><strong>Sakana Fugu</strong> — summon-only council guest for hard calls; Fugu Ultra for agentic missions</li>
+          <li><strong>Fallback chains</strong> — automatic seat handoff on billing failure, timeout, or offline providers</li>
+          <li><strong>Agent tools toggle</strong> — scoped filesystem bridge for local seats</li>
+        </ul>
+      </article>
+
+      <article class="version" id="v022">
         <div class="version-head">
           <h3>v0.2.2 · Local-First</h3>
-          <span class="badge badge-live">Current</span>
+          <span class="badge badge-beta">Shipped</span>
           <span class="version-date">2026-06-21</span>
         </div>
         <p class="sub">Local agents lead by default. Paid API seats are opt-in.</p>
         <ul>
-          <li><strong>Local agent seat</strong> — full agent loop via HTTP, not raw chat completion</li>
-          <li><strong>Priority routing</strong> — local → fallback local → paid seats (when enabled)</li>
           <li><strong>Setup wizard</strong> — guided onboarding for local models and optional API keys</li>
-          <li><strong>Cost visibility</strong> — per-message usage estimates and expensive-request confirmation</li>
-          <li><strong>Offline model vault</strong> — hot-tier defaults when a local model library is mounted</li>
+          <li><strong>Cost visibility</strong> — per-message usage chips and expensive-request confirmation</li>
           <li><strong>Seat toggles</strong> — enable or disable paid seats without restarting</li>
+          <li><strong>Offline model vault</strong> — hot-tier defaults when a local model library is mounted</li>
         </ul>
       </article>
 
@@ -291,7 +368,6 @@ footer a:hover{color:var(--text)}
           <li><strong>Embedded Next server</strong> — production smoke tests for packaged builds</li>
           <li><strong>UserData database</strong> — SQLite in application data, not inside the app bundle</li>
           <li><strong>Filesystem bridge hardening</strong> — path checks block symlink escape</li>
-          <li><strong>Production Electron fixes</strong> — resolves bundle path issues on install</li>
         </ul>
       </article>
 
@@ -304,11 +380,9 @@ footer a:hover{color:var(--text)}
         <p class="sub">Production packaging and boardroom UX improvements.</p>
         <ul>
           <li><strong>Side-thread merge</strong> — summaries post as a dedicated seat</li>
-          <li><strong>Export</strong> — full side-thread sections in markdown export</li>
           <li><strong>PASS normalization</strong> — consistent skip semantics across seats</li>
           <li><strong>Exchange limit</strong> — caps seat-to-seat replies between your messages</li>
-          <li><strong>Filesystem bridge</strong> — scoped read/write/list in the desktop app</li>
-          <li><strong>Auth clarity</strong> — clearer token expiry and re-login messaging</li>
+          <li><strong>Export</strong> — full side-thread sections in markdown export</li>
         </ul>
       </article>
 
@@ -321,25 +395,8 @@ footer a:hover{color:var(--text)}
         <p class="sub">First feature-complete desktop build.</p>
         <ul>
           <li><strong>Boardroom chat</strong> — user-driven turns, SQLite persistence</li>
-          <li><strong>Seats</strong> — Claude, Grok, local Ollama; health check per provider</li>
-          <li><strong>Votes + tasks</strong> — confidence ballots, local-only tally, task assignment</li>
-          <li><strong>Side threads</strong> — branch, isolate, merge-back</li>
+          <li><strong>Votes + tasks + side threads</strong> — confidence ballots, local-only tally</li>
           <li><strong>Cost Guard + Local Only</strong> — spend thresholds and ⌘L routing</li>
-          <li><strong>Invite modal</strong> — seat any running Ollama model</li>
-        </ul>
-      </article>
-
-      <article class="version archived" id="spec">
-        <div class="version-head">
-          <h3>Design spec</h3>
-          <span class="badge badge-arch">Origin</span>
-          <span class="version-date">2026-06-19</span>
-        </div>
-        <p class="sub">Multi-model design session produced the locked architecture.</p>
-        <ul>
-          <li><strong>Locked decisions</strong> — persistence, routing, cost rules, app shell</li>
-          <li><strong>Feature set</strong> — orchestrator, side threads, votes, export</li>
-          <li><strong>Stack</strong> — Electron, Next.js, Tailwind, Zustand, TypeScript</li>
         </ul>
       </article>
 
@@ -351,10 +408,9 @@ footer a:hover{color:var(--text)}
   <div class="wrap">
     <div class="cta-band">
       <p class="eyebrow">Get Camelot</p>
-      <h2>Run it on your Mac.</h2>
+      <h2>Run the council on your Mac.</h2>
       <p class="sub" style="max-width:52ch;margin:0 auto 24px">
-        Desktop app for macOS arm64. Requires Node 20+ and Ollama for free local seats.
-        Paid API seats are optional.
+        Desktop app for macOS arm64. Ollama for free local seats. ALMI-compatible agent orchestration out of the box.
       </p>
       <div class="narrow">
         <pre class="code-block">git clone https://github.com/CaplifiTechnologies/CamelotAI.git
@@ -364,10 +420,10 @@ npm run prisma:generate
 npm run prisma:push
 npm run desktop</pre>
       </div>
-      <p class="tiny mt24">Or install the .dmg when a release is published. Stack: Electron 30 · Next.js 14 · Prisma · MIT License</p>
+      <p class="tiny mt24">Optional keys: Anthropic (Claude), xAI (Grok), Sakana (Fugu) — stored in macOS Keychain</p>
       <div class="row mt24">
-        <a class="btn btn-emerald" href="https://ollama.com" rel="noopener">Get Ollama</a>
-        <a class="btn btn-ghost" href="#features">See features</a>
+        <a class="btn btn-emerald" href="https://github.com/CaplifiTechnologies/CamelotAI" rel="noopener">View on GitHub</a>
+        <a class="btn btn-ghost" href="https://ollama.com" rel="noopener">Get Ollama</a>
       </div>
     </div>
   </div>
@@ -376,12 +432,12 @@ npm run desktop</pre>
 <footer>
   <div class="wrap center">
     <div class="brand-name" style="font-family:var(--display);font-size:14px;letter-spacing:.1em">⚔️ Camelot</div>
-    <p class="tiny mt">Multi-model AI boardroom · Local-first · MIT licensed</p>
+    <p class="tiny mt">ALMI council boardroom · Local-first · MIT licensed</p>
     <div class="links">
-      <a href="#stack">Version history</a>
-      <a href="#features">Features</a>
+      <a href="#agents">Council</a>
+      <a href="#stack">History</a>
       <a href="https://github.com/CaplifiTechnologies/CamelotAI" rel="noopener">GitHub</a>
-      <a href="https://ollama.com" rel="noopener">Ollama</a>
+      <a href="https://sakana.ai/fugu/" rel="noopener">Sakana Fugu</a>
     </div>
     <p class="tiny mt24">© 2026 CamelotAI contributors</p>
   </div>
