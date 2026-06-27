@@ -262,6 +262,7 @@ type OdysseusChatOpts = {
   mode?: 'agent' | 'chat'
   allowBash?: boolean
   allowWebSearch?: boolean
+  useRag?: boolean
   handoff?: boolean
   timeoutMs?: number
 }
@@ -276,7 +277,7 @@ async function askOdysseusAgent(
   form.append('session', sessionId)
   form.append('mode', opts.mode ?? 'agent')
   form.append('preset_id', ODYSSEUS_PRESET_ID)
-  form.append('use_rag', 'true')
+  form.append('use_rag', opts.useRag === false ? 'false' : 'true')
   form.append('allow_bash', opts.allowBash === false ? 'false' : 'true')
   form.append('allow_web_search', opts.allowWebSearch === false ? 'false' : 'true')
   form.append('workspace', os.homedir())
@@ -305,7 +306,7 @@ export async function askOdysseus(
   opts: OdysseusChatOpts = {},
 ): Promise<ProviderReply> {
   const userText = latestUserText(history)
-  const bridge = tryFileBridge(userText)
+  const bridge = opts.handoff ? { handled: false as const } : tryFileBridge(userText)
   if (bridge.handled && opts.mode !== 'chat') {
     const content = bridge.content
     return {
@@ -323,9 +324,11 @@ export async function askOdysseus(
   }
 
   // qwen2.5 often narrates write_file without executing — fulfill via verified bridge.
-  const fallback = tryFileBridge(userText)
-  if (fallback.handled && wantsWriteLike(userText)) {
-    content = fallback.content
+  if (!opts.handoff) {
+    const fallback = tryFileBridge(userText)
+    if (fallback.handled && wantsWriteLike(userText)) {
+      content = fallback.content
+    }
   }
 
   const estIn = Math.ceil(message.length / 4)

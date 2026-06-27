@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import SeatRail from '@/components/SeatRail'
 import TaskPanel from '@/components/TaskPanel'
 import VotePanel from '@/components/VotePanel'
@@ -53,6 +53,7 @@ export default function Home() {
   const [thread, setThread] = useState<{ threadId: string; parent: Message } | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [handoffOpening, setHandoffOpening] = useState(false)
+  const handoffTriedRef = useRef<string | null>(null)
   const [rooms, setRooms] = useState<CouncilRoom[]>([])
   const [activeRoom, setActiveRoom] = useState<CouncilRoom | null>(null)
   const [counselRoles, setCounselRoles] = useState<CounselRole[]>([])
@@ -220,11 +221,13 @@ export default function Home() {
     if (handoffOpening || busy) return
     try {
       const pending = await api.handoffPending()
-      if (!pending.pending) return
+      if (!pending.pending || !pending.pickup?.fingerprint) return
+      if (handoffTriedRef.current === pending.pickup.fingerprint) return
+      handoffTriedRef.current = pending.pickup.fingerprint
       setHandoffOpening(true)
       setNotice('Handoff received — Odysseus is summarizing…')
       const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 120_000)
+      const timer = setTimeout(() => controller.abort(), 200_000)
       let result: Awaited<ReturnType<typeof api.openHandoff>>
       try {
         result = await fetch('/api/handoff/open', {
@@ -248,7 +251,7 @@ export default function Home() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       if (msg.includes('abort')) {
-        setError('Handoff timed out after 2 minutes — Odysseus may be stuck. Refresh or retry.')
+        setError('Handoff timed out after 3 minutes — Odysseus may be stuck. Refresh or retry.')
       } else {
         setError(msg)
       }

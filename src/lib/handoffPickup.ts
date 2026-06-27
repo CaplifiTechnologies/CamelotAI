@@ -5,9 +5,11 @@ import os from 'node:os'
 import path from 'node:path'
 import { askOdysseus } from '@/lib/providers/odysseus'
 
-const PRIMARY_EXCERPT_CHARS = 12_000
-const PER_FILE_CHARS = 14_000
-const INLINE_BUNDLE_MAX = 72_000
+const PRIMARY_EXCERPT_CHARS = 5_000
+const PER_FILE_CHARS = 4_000
+const INLINE_BUNDLE_MAX = 14_000
+/** Odysseus rejects messages over 50k — keep formatted payload under this. */
+const MAX_HANDOFF_PAYLOAD_CHARS = 46_000
 
 const HOME = os.homedir()
 
@@ -148,11 +150,18 @@ function readPrimaryExcerpt(primaryPath: string): string {
   return readFileExcerpt(primaryPath, PRIMARY_EXCERPT_CHARS)
 }
 
-function handoffUserPrompt(pickup: HandoffPickup): string {
+function trimHandoffUserPrompt(text: string, system: string): string {
+  const overhead = system.length + 400
+  const budget = MAX_HANDOFF_PAYLOAD_CHARS - overhead
+  if (text.length <= budget) return text
+  return `${text.slice(0, Math.max(0, budget - 80))}\n\n…[handoff context truncated for Odysseus message limit]`
+}
+
+function handoffUserPrompt(pickup: HandoffPickup, system: string): string {
   const excerpt = readPrimaryExcerpt(pickup.primary)
   const inline = readInlineBundle(pickup)
   const lines = [
-    'HANDOFF PICKUP — write your structured summary now from the inline context below.',
+    'HANDOFF PICKUP — deliver your structured summary now from the inline context below.',
     '',
     `Project: ${pickup.project_id}`,
     `Title: ${pickup.summary}`,
@@ -166,22 +175,24 @@ function handoffUserPrompt(pickup: HandoffPickup): string {
   if (inline.trim()) {
     lines.push('## Bundled context (inline)', '', inline.trim(), '')
   }
-  lines.push('Produce your structured summary now — no preamble, no tools.')
-  return lines.join('\n')
+  lines.push('Deliver your structured summary now — no preamble, no tools, no file writes.')
+  return trimHandoffUserPrompt(lines.join('\n'), system)
 }
 
 export async function summarizeHandoffWithOdysseus(pickup: HandoffPickup) {
   const threadKey = `handoff-${pickup.fingerprint}`
+  const system = handoffSystemPrompt(pickup.mode)
   return askOdysseus(
-    [{ role: 'user', content: handoffUserPrompt(pickup) }],
-    handoffSystemPrompt(pickup.mode),
+    [{ role: 'user', content: handoffUserPrompt(pickup, system) }],
+    system,
     threadKey,
     {
       mode: 'chat',
       allowBash: false,
       allowWebSearch: false,
       handoff: true,
-      timeoutMs: 90_000,
+      useRag: false,
+      timeoutMs: 180_000,
     },
   )
 }

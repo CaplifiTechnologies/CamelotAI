@@ -11,14 +11,22 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 let inFlightFingerprint: string | null = null
+let inFlightSince = 0
+const IN_FLIGHT_STALE_MS = 120_000
 
 export async function POST() {
   const pickup = pendingHandoffPickup()
   if (!pickup) {
     return NextResponse.json({ opened: false, reason: 'no_pending_handoff' })
   }
-  if (inFlightFingerprint === pickup.fingerprint) {
+  if (
+    inFlightFingerprint === pickup.fingerprint &&
+    Date.now() - inFlightSince < IN_FLIGHT_STALE_MS
+  ) {
     return NextResponse.json({ opened: false, reason: 'already_opening' })
+  }
+  if (inFlightFingerprint && Date.now() - inFlightSince >= IN_FLIGHT_STALE_MS) {
+    inFlightFingerprint = null
   }
   if (!odysseusConfigured()) {
     return NextResponse.json(
@@ -28,6 +36,7 @@ export async function POST() {
   }
 
   inFlightFingerprint = pickup.fingerprint
+  inFlightSince = Date.now()
   try {
     const introMarker = `📥 Handoff received — **${pickup.summary}** (${pickup.mode})`
     const existingIntro = await prisma.message.findFirst({
