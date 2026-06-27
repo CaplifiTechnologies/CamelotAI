@@ -6,6 +6,8 @@ import path from 'node:path'
 import { askOdysseus } from '@/lib/providers/odysseus'
 
 const PRIMARY_EXCERPT_CHARS = 12_000
+const PER_FILE_CHARS = 14_000
+const INLINE_BUNDLE_MAX = 72_000
 
 const HOME = os.homedir()
 
@@ -57,14 +59,64 @@ export function pendingHandoffPickup(): HandoffPickup | null {
   return pickup
 }
 
+function readInlineBundle(pickup: HandoffPickup): string {
+  const paths: string[] = []
+  try {
+    if (fs.existsSync(HANDOFF_CONTEXT_PATHS_FILE)) {
+      const fromFile = fs
+        .readFileSync(HANDOFF_CONTEXT_PATHS_FILE, 'utf8')
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean)
+      paths.push(...fromFile)
+    }
+  } catch {
+    /* ignore */
+  }
+  if (!paths.length && pickup.bundle_dir) {
+    try {
+      const walk = (dir: string, depth: number) => {
+        if (depth > 3 || paths.length > 24) return
+        for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, ent.name)
+          if (ent.isDirectory()) walk(full, depth + 1)
+          else if (/\.(md|txt|json|yaml|yml)$/i.test(ent.name)) paths.push(full)
+        }
+      }
+      walk(pickup.bundle_dir.replace(/^~/, HOME), 0)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const sections: string[] = []
+  let total = 0
+  for (const raw of paths) {
+    if (total >= INLINE_BUNDLE_MAX) break
+    const file = raw.replace(/^~/, HOME)
+    const body = readFileExcerpt(file, PER_FILE_CHARS)
+    if (!body.trim()) continue
+    const label = path.basename(file)
+    const chunk = `### ${label}\n${body.trim()}`
+    if (total + chunk.length > INLINE_BUNDLE_MAX) {
+      sections.push(`${chunk.slice(0, INLINE_BUNDLE_MAX - total)}\n\n…[truncated]`)
+      break
+    }
+    sections.push(chunk)
+    total += chunk.length
+  }
+  return sections.join('\n\n')
+}
+
+const HANDOFF_CONTEXT_PATHS_FILE = path.join(HOME, '.camelot', 'handoff-context.paths')
+
 function handoffSystemPrompt(mode: HandoffPickup['mode']): string {
   const lines = [
     'You are Odysseus, the local-first Council seat in Camelot.',
-    'Matt just dropped a handoff document — the full text and cited references are in your injected context.',
-    'Your job right now is to OPEN the conversation with a structured handoff summary.',
-    'Read every injected context file before replying.',
-    'Do NOT use bash, tools, or file reads — the handoff is already in your injected context.',
-    'Do NOT say you will read files or ask to proceed — summarize immediately.',
+    'Matt dropped a handoff — all source text is inline in this message below.',
+    'Your job is to OPEN the conversation with a structured handoff summary.',
+    'CHAT ONLY: do not use tools, bash, or claim you will fetch anything.',
+    'Summarize immediately from the inline context. Do not ask to proceed.',
     'Reply in plain markdown only. Be concise and substantive. Do not reply PASS.',
     'Format your reply with these sections:',
     '**Handoff summary** — what this is about (2–4 sentences)',
@@ -80,46 +132,56 @@ function handoffSystemPrompt(mode: HandoffPickup['mode']): string {
   return lines.join(' ')
 }
 
-function readPrimaryExcerpt(primaryPath: string): string {
+function readFileExcerpt(filePath: string, maxChars: number): string {
   try {
-    const file = primaryPath.replace(/^~/, HOME)
+    const file = filePath.replace(/^~/, HOME)
     if (!fs.existsSync(file)) return ''
     const raw = fs.readFileSync(file, 'utf8')
-    if (raw.length <= PRIMARY_EXCERPT_CHARS) return raw
-    return `${raw.slice(0, PRIMARY_EXCERPT_CHARS)}\n\n…[truncated]`
+    if (raw.length <= maxChars) return raw
+    return `${raw.slice(0, maxChars)}\n\n…[truncated]`
   } catch {
     return ''
   }
 }
 
+function readPrimaryExcerpt(primaryPath: string): string {
+  return readFileExcerpt(primaryPath, PRIMARY_EXCERPT_CHARS)
+}
+
 function handoffUserPrompt(pickup: HandoffPickup): string {
   const excerpt = readPrimaryExcerpt(pickup.primary)
+  const inline = readInlineBundle(pickup)
   const lines = [
-    'HANDOFF PICKUP — respond NOW with your structured summary (no preamble, no tool use).',
+    'HANDOFF PICKUP — write your structured summary now from the inline context below.',
     '',
     `Project: ${pickup.project_id}`,
     `Title: ${pickup.summary}`,
     `Mode: ${pickup.mode}${pickup.mode_reason ? ` (${pickup.mode_reason})` : ''}`,
-    `Bundle: ${pickup.bundle_dir}`,
-    `Context files: ${pickup.file_count}`,
+    `Sources attached: ${pickup.file_count}`,
     '',
   ]
   if (excerpt.trim()) {
-    lines.push('## Primary handoff (excerpt)', '', excerpt.trim(), '')
+    lines.push('## Primary handoff', '', excerpt.trim(), '')
   }
-  lines.push(
-    'Additional cited references and HBI context are in your injected context sections.',
-    'Open this conversation with your structured summary now.',
-  )
+  if (inline.trim()) {
+    lines.push('## Bundled context (inline)', '', inline.trim(), '')
+  }
+  lines.push('Produce your structured summary now — no preamble, no tools.')
   return lines.join('\n')
 }
 
 export async function summarizeHandoffWithOdysseus(pickup: HandoffPickup) {
-  const threadKey = `handoff-${pickup.id}`
+  const threadKey = `handoff-${pickup.fingerprint}`
   return askOdysseus(
     [{ role: 'user', content: handoffUserPrompt(pickup) }],
     handoffSystemPrompt(pickup.mode),
     threadKey,
-    { mode: 'chat', allowBash: false, allowWebSearch: false },
+    {
+      mode: 'chat',
+      allowBash: false,
+      allowWebSearch: false,
+      handoff: true,
+      timeoutMs: 90_000,
+    },
   )
 }

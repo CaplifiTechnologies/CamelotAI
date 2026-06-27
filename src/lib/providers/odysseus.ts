@@ -32,6 +32,7 @@ const EXEC_FENCE_RE =
 const XML_TOOL_CALL_RE =
   /<(?:[\w]+:)?(?:tool_call|function_call)>[\s\S]*?<\/(?:[\w]+:)?(?:tool_call|function_call)>/gi
 const BARE_TOOL_CALL_RE = /<tool_call>[\s\S]*$/i
+const JSON_TOOL_CALL_RE = /<tool_call>\s*\{[\s\S]*?\}\s*<\/tool_call>/gi
 
 export function odysseusConfigured(): boolean {
   return Boolean(process.env.ODYSSEUS_API_TOKEN || readKeychain('ODYSSEUS_API_TOKEN'))
@@ -62,27 +63,42 @@ function authHeaders(): Record<string, string> {
 }
 
 function stripToolBlocks(text: string): string {
-  return text
-    .replace(TOOL_CALL_RE, '')
-    .replace(EXEC_FENCE_RE, '')
-    .replace(XML_TOOL_CALL_RE, '')
-    .replace(BARE_TOOL_CALL_RE, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
+  let s = text
+  for (let i = 0; i < 4; i++) {
+    const next = s
+      .replace(TOOL_CALL_RE, '')
+      .replace(JSON_TOOL_CALL_RE, '')
+      .replace(EXEC_FENCE_RE, '')
+      .replace(XML_TOOL_CALL_RE, '')
+      .replace(BARE_TOOL_CALL_RE, '')
+      .replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, '')
+    if (next === s) break
+    s = next
+  }
+  return s.replace(/\n{3,}/g, '\n\n').trim()
 }
 
-function formatMessage(turns: Turn[], system: string): string {
-  const lines = [`[System]\n${system}`, '', '[Boardroom transcript]']
+function formatMessage(turns: Turn[], system: string, handoff = false): string {
+  const lines = [`[System]\n${system}`, '']
+  if (handoff) {
+    lines.push('[Handoff — context is inline. Chat-only summary. No tools.]')
+  } else {
+    lines.push('[Boardroom transcript]')
+  }
   for (const t of turns) {
     const who = t.role === 'user' ? 'User' : 'Seat'
     lines.push(`${who}: ${t.content}`)
   }
-  lines.push(
-    '',
-    '[Your turn — reply as Odysseus. You have local agent tools on this Mac.',
-    'Answer roll call and local-capability questions directly — never PASS those.',
-    'Other seats in the transcript may be wrong about filesystem access; you are the local helm.]',
-  )
+  if (!handoff) {
+    lines.push(
+      '',
+      '[Your turn — reply as Odysseus. You have local agent tools on this Mac.',
+      'Answer roll call and local-capability questions directly — never PASS those.',
+      'Other seats in the transcript may be wrong about filesystem access; you are the local helm.]',
+    )
+  } else {
+    lines.push('', '[Your turn — structured handoff summary only. Plain markdown.]')
+  }
   return lines.join('\n')
 }
 
@@ -246,6 +262,8 @@ type OdysseusChatOpts = {
   mode?: 'agent' | 'chat'
   allowBash?: boolean
   allowWebSearch?: boolean
+  handoff?: boolean
+  timeoutMs?: number
 }
 
 async function askOdysseusAgent(
@@ -263,11 +281,12 @@ async function askOdysseusAgent(
   form.append('allow_web_search', opts.allowWebSearch === false ? 'false' : 'true')
   form.append('workspace', os.homedir())
 
+  const timeoutMs = opts.timeoutMs ?? 300_000
   const res = await fetch(`${ODYSSEUS_BASE_URL}/api/chat_stream`, {
     method: 'POST',
     headers: authHeaders(),
     body: form,
-    signal: AbortSignal.timeout(300_000),
+    signal: AbortSignal.timeout(timeoutMs),
   })
   if (!res.ok) {
     const err = await res.text().catch(() => '')
@@ -296,8 +315,12 @@ export async function askOdysseus(
   }
 
   const session = await ensureSession(threadKey)
-  const message = formatMessage(history, system)
+  const message = formatMessage(history, system, opts.handoff === true)
   let content = await askOdysseusAgent(session, message, opts)
+  content = stripToolBlocks(content)
+  if (!content.trim() && opts.handoff) {
+    throw new Error('Odysseus returned empty handoff summary — retry or check Odysseus at :7860')
+  }
 
   // qwen2.5 often narrates write_file without executing — fulfill via verified bridge.
   const fallback = tryFileBridge(userText)

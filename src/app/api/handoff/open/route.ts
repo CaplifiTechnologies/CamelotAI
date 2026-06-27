@@ -10,10 +10,15 @@ import { odysseusConfigured } from '@/lib/providers/odysseus'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+let inFlightFingerprint: string | null = null
+
 export async function POST() {
   const pickup = pendingHandoffPickup()
   if (!pickup) {
     return NextResponse.json({ opened: false, reason: 'no_pending_handoff' })
+  }
+  if (inFlightFingerprint === pickup.fingerprint) {
+    return NextResponse.json({ opened: false, reason: 'already_opening' })
   }
   if (!odysseusConfigured()) {
     return NextResponse.json(
@@ -22,17 +27,28 @@ export async function POST() {
     )
   }
 
+  inFlightFingerprint = pickup.fingerprint
   try {
-    const intro = await prisma.message.create({
-      data: {
-        seatKey: 'matt',
-        content: `📥 Handoff received — **${pickup.summary}** (${pickup.mode})`,
-      },
+    const introMarker = `📥 Handoff received — **${pickup.summary}** (${pickup.mode})`
+    const existingIntro = await prisma.message.findFirst({
+      where: { seatKey: 'matt', content: introMarker },
+      orderBy: { createdAt: 'desc' },
     })
 
+    const intro =
+      existingIntro ??
+      (await prisma.message.create({
+        data: { seatKey: 'matt', content: introMarker },
+      }))
+
     const reply = await summarizeHandoffWithOdysseus(pickup)
+    const clean = reply.content.trim()
+    if (!clean) {
+      throw new Error('Odysseus returned an empty summary')
+    }
+
     const summary = await prisma.message.create({
-      data: { seatKey: 'odysseus', content: reply.content },
+      data: { seatKey: 'odysseus', content: clean },
     })
 
     markHandoffConsumed(pickup.fingerprint)
@@ -50,5 +66,7 @@ export async function POST() {
       },
       { status: 502 },
     )
+  } finally {
+    inFlightFingerprint = null
   }
 }

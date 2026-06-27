@@ -223,24 +223,39 @@ export default function Home() {
       if (!pending.pending) return
       setHandoffOpening(true)
       setNotice('Handoff received — Odysseus is summarizing…')
-      const result = await api.openHandoff()
-      if (!result.opened) return
-      for (const m of result.messages ?? []) {
-        addMessage({
-          id: m.id,
-          seatKey: m.seatKey,
-          content: m.content,
-          createdAt: m.createdAt,
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 120_000)
+      let result: Awaited<ReturnType<typeof api.openHandoff>>
+      try {
+        result = await fetch('/api/handoff/open', {
+          method: 'POST',
+          signal: controller.signal,
+        }).then(async (r) => {
+          const body = await r.json()
+          if (!r.ok) throw new Error(body.error ?? `HTTP ${r.status}`)
+          return body
         })
+      } finally {
+        clearTimeout(timer)
       }
+      if (!result.opened) {
+        if (result.reason === 'already_opening') return
+        return
+      }
+      await reloadMain()
       if (result.usage) recordUsage(result.usage)
       setNotice('Handoff summary ready.')
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.includes('abort')) {
+        setError('Handoff timed out after 2 minutes — Odysseus may be stuck. Refresh or retry.')
+      } else {
+        setError(msg)
+      }
     } finally {
       setHandoffOpening(false)
     }
-  }, [addMessage, busy, handoffOpening, recordUsage])
+  }, [busy, handoffOpening, recordUsage, reloadMain])
 
   useEffect(() => {
     loadRooms()
