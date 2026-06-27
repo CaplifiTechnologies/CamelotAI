@@ -12,18 +12,28 @@ export const runtime = 'nodejs'
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const threadId = searchParams.get('threadId')
-  const where = threadId ? { threadId } : { threadId: null }
+  const roomId = searchParams.get('roomId')
+  const where: { threadId: string | null; roomId?: string | null } = threadId
+    ? { threadId }
+    : { threadId: null }
+  if (roomId) where.roomId = roomId
+  else if (!threadId) where.roomId = null
   const messages = await prisma.message.findMany({ where, orderBy: { createdAt: 'asc' } })
   return NextResponse.json({ messages })
 }
 
 export async function POST(req: Request) {
-  const { seatKey, content, threadId } = (await req.json()) ?? {}
+  const { seatKey, content, threadId, roomId } = (await req.json()) ?? {}
   if (!seatKey || typeof content !== 'string') {
     return NextResponse.json({ error: 'seatKey and content required' }, { status: 400 })
   }
   const message = await prisma.message.create({
-    data: { seatKey, content, threadId: threadId ?? null },
+    data: {
+      seatKey,
+      content,
+      threadId: threadId ?? null,
+      roomId: roomId ?? null,
+    },
   })
   return NextResponse.json({ message })
 }

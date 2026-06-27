@@ -25,6 +25,8 @@ const DEFAULT_SEAT_ENABLED: Record<string, boolean> = {
   grok: false,
   gpt: false,
   gemini: false,
+  fugu: false,
+  'fugu-ultra': false,
 }
 
 function loadAgentTools(): boolean {

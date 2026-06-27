@@ -3,7 +3,7 @@
 
 import { execFileSync } from 'node:child_process'
 
-export type SecretService = 'ANTHROPIC_API_KEY' | 'XAI_API_KEY' | 'ODYSSEUS_API_TOKEN'
+export type SecretService = 'ANTHROPIC_API_KEY' | 'XAI_API_KEY' | 'ODYSSEUS_API_TOKEN' | 'SAKANA_API_KEY'
 
 export function readKeychain(service: SecretService): string | null {
   if (process.env[service]) return process.env[service]!

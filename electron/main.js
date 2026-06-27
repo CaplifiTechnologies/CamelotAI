@@ -160,8 +160,28 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
+function startCouncilBridge() {
+  const bridge = path.join(appRoot, 'scripts', 'council_bridge.py')
+  const port = process.env.CAMELOT_COUNCIL_PORT ?? '20022'
+  try {
+    const { spawn } = require('child_process')
+    const proc = spawn('python3', [bridge, port], {
+      stdio: 'inherit',
+      env: { ...process.env, CAMELOT_WEB_PORT: PORT },
+      detached: true,
+    })
+    proc.on('exit', (code) => {
+      if (code) console.error(`[camelot] council bridge exited (${code})`)
+    })
+    console.log(`[camelot] council bridge pid ${proc.pid} :${port}`)
+  } catch (err) {
+    console.error('[camelot] council bridge failed to start:', err)
+  }
+}
+
 app.whenReady().then(async () => {
   buildMenu()
+  startCouncilBridge()
   try {
     const url = await resolveWebUrl()
     createWindow(url)

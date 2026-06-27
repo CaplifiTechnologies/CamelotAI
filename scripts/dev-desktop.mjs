@@ -39,6 +39,10 @@ async function waitForServer(url, timeoutMs = 60_000) {
   return false
 }
 
+console.log(`[desktop] starting council bridge on :${process.env.CAMELOT_COUNCIL_PORT ?? '20022'} …`)
+const { startCouncilBridge } = await import('./start-council-bridge.mjs')
+startCouncilBridge()
+
 console.log(`[desktop] starting Next dev on :${PORT} …`)
 const next = spawn('npm', ['run', 'dev'], {
   stdio: 'inherit',

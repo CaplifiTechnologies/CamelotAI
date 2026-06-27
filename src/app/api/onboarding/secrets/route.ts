@@ -5,7 +5,7 @@ import { writeKeychain, type SecretService } from '@/lib/secrets'
 
 export const runtime = 'nodejs'
 
-const ALLOWED: SecretService[] = ['ANTHROPIC_API_KEY', 'XAI_API_KEY', 'ODYSSEUS_API_TOKEN']
+const ALLOWED: SecretService[] = ['ANTHROPIC_API_KEY', 'XAI_API_KEY', 'ODYSSEUS_API_TOKEN', 'SAKANA_API_KEY']
 
 export async function POST(req: Request) {
   if (process.platform !== 'darwin') {

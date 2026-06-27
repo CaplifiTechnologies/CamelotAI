@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { LOCAL_TALLY_MODEL, OLLAMA_BASE_URL } from '@/lib/seats'
 import { ollamaReachable } from '@/lib/providers/ollama'
 import { anthropicConfigured, anthropicSource } from '@/lib/providers/anthropic'
+import { fuguConfigured, fuguSource } from '@/lib/providers/fugu'
 import { grokConfigured, grokSource } from '@/lib/providers/grok'
 import { odysseusConfigured, odysseusHealthy, odysseusSource } from '@/lib/providers/odysseus'
 import { bunkerMounted, readHotDefaults } from '@/lib/bunkerManifest'
@@ -52,6 +53,7 @@ export async function GET() {
     secrets: {
       claude: { configured: anthropicConfigured(), source: anthropicSource() },
       grok: { configured: grokConfigured(), source: grokSource() },
+      fugu: { configured: fuguConfigured(), source: fuguSource() },
       odysseus: { configured: odysseusConfigured(), source: odysseusSource() },
     },
     platform: process.platform,

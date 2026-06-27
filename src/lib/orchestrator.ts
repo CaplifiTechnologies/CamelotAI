@@ -4,7 +4,7 @@
 // (section 14 TODO: .env for the personal build).
 
 import { checkCost, estimateTokens, type CostWarning } from './costGuard'
-import { LOCAL_TALLY_MODEL, OLLAMA_BASE_URL, SEATS, type SeatStatus } from './seats'
+import { isSummonOnlySeat, LOCAL_TALLY_MODEL, OLLAMA_BASE_URL, SEATS, type SeatStatus } from './seats'
 
 export interface OllamaMessage {
   role: 'system' | 'user' | 'assistant'
@@ -108,7 +108,7 @@ const PRIORITY = ['odysseus', 'qwen', 'claude', 'grok', 'gemini', 'gpt']
 
 const LOCAL_PRIORITY = ['odysseus']
 
-const CALLABLE = new Set(['odysseus', 'claude', 'grok', 'qwen', 'local'])
+const CALLABLE = new Set(['odysseus', 'claude', 'grok', 'fugu', 'fugu-ultra', 'qwen', 'local'])
 
 /** Seats the chat API can actually call in this build. */
 export function isCallableSeat(key: string): boolean {
@@ -204,9 +204,17 @@ export function routeMessage(
   mentionedSeat?: string,
 ): RouteResult {
   // @mention override (locked feature): forces a named seat regardless of routing.
-  if (mentionedSeat && ctx.activeSeatKeys.includes(mentionedSeat)) {
-    const def = SEATS.find((s) => s.key === mentionedSeat)
-    return { seat: mentionedSeat, cost: def?.cost ?? 'paid', note: '@mention override' }
+  // Summon-only guests (e.g. Fugu) work even when their toggle is off.
+  if (mentionedSeat && isCallableSeat(mentionedSeat)) {
+    const summon = isSummonOnlySeat(mentionedSeat)
+    if (summon || ctx.activeSeatKeys.includes(mentionedSeat)) {
+      const def = SEATS.find((s) => s.key === mentionedSeat)
+      return {
+        seat: mentionedSeat,
+        cost: def?.cost ?? 'paid',
+        note: summon ? '@summon (guest seat)' : '@mention override',
+      }
+    }
   }
 
   // Local Only mode: Odysseus primary; Qwen steps in via fallback chain only.

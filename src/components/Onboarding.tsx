@@ -17,6 +17,7 @@ interface OnboardingStatus {
   secrets: {
     claude: { configured: boolean; source: string | null }
     grok: { configured: boolean; source: string | null }
+    fugu?: { configured: boolean; source: string | null }
     odysseus?: { configured: boolean; source: string | null }
   }
   keychainSupported: boolean
@@ -43,6 +44,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [pullNote, setPullNote] = useState<string | null>(null)
   const [claudeKey, setClaudeKey] = useState('')
   const [grokKey, setGrokKey] = useState('')
+  const [fuguKey, setFuguKey] = useState('')
   const [saving, setSaving] = useState<string | null>(null)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [assistQ, setAssistQ] = useState('')
@@ -114,15 +116,25 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     }
   }
 
-  async function saveKey(service: 'ANTHROPIC_API_KEY' | 'XAI_API_KEY', value: string) {
+  async function saveKey(
+    service: 'ANTHROPIC_API_KEY' | 'XAI_API_KEY' | 'SAKANA_API_KEY',
+    value: string,
+  ) {
     if (!value.trim()) return
     setSaving(service)
     setSaveMsg(null)
     try {
       await api.saveSecret(service, value)
-      setSaveMsg(service === 'ANTHROPIC_API_KEY' ? 'Claude key saved to Keychain.' : 'Grok key saved to Keychain.')
+      const msg =
+        service === 'ANTHROPIC_API_KEY'
+          ? 'Claude key saved to Keychain.'
+          : service === 'XAI_API_KEY'
+            ? 'Grok key saved to Keychain.'
+            : 'Fugu key saved to Keychain — summon with @fugu in Council.'
+      setSaveMsg(msg)
       if (service === 'ANTHROPIC_API_KEY') setClaudeKey('')
-      else setGrokKey('')
+      else if (service === 'XAI_API_KEY') setGrokKey('')
+      else setFuguKey('')
       refresh()
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : String(e))
@@ -381,6 +393,43 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                       <button
                         onClick={() => saveKey('XAI_API_KEY', grokKey)}
                         disabled={!grokKey.trim() || saving === 'XAI_API_KEY'}
+                        className="px-3 py-1.5 rounded bg-zinc-700 hover:bg-zinc-600 text-xs disabled:opacity-40"
+                      >
+                        Save to Keychain
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-zinc-800 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Fugu (Sakana)</span>
+                    <span className={`text-xs ${status?.secrets.fugu?.configured ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                      {status?.secrets.fugu?.configured
+                        ? `✓ connected (${status.secrets.fugu.source})`
+                        : 'optional guest — @fugu only'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500">
+                    Council guest for hard calls — not auto-routed. Key at{' '}
+                    <a href="https://console.sakana.ai/api-keys" target="_blank" rel="noreferrer" className="underline">
+                      console.sakana.ai
+                    </a>
+                    . Summon with <code className="text-zinc-400">@fugu</code> (toggle can stay off).
+                  </p>
+                  {status?.keychainSupported && !status.secrets.fugu?.configured && (
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        value={fuguKey}
+                        onChange={(e) => setFuguKey(e.target.value)}
+                        placeholder="sk-sakana-…"
+                        className="flex-1 bg-zinc-950 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                        autoComplete="off"
+                      />
+                      <button
+                        onClick={() => saveKey('SAKANA_API_KEY', fuguKey)}
+                        disabled={!fuguKey.trim() || saving === 'SAKANA_API_KEY'}
                         className="px-3 py-1.5 rounded bg-zinc-700 hover:bg-zinc-600 text-xs disabled:opacity-40"
                       >
                         Save to Keychain

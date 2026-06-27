@@ -9,12 +9,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Room {
+  id              String    @id @default(cuid())
+  name            String
+  counsel         Boolean   @default(false)
+  counselProject  String?
+  counselInboxId  Int?
+  counselPlaybook String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  messages        Message[]
+}
+
 model Message {
   id        String    @id @default(cuid())
   seatKey   String
   content   String
   editedAt  DateTime?
   threadId  String?
+  roomId    String?
+  room      Room?     @relation(fields: [roomId], references: [id])
   createdAt DateTime  @default(now())
 }
 

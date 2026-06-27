@@ -11,6 +11,8 @@ export interface SeatDef {
   model: string
   cost: SeatCost
   bestFor: string
+  /** Guest seat — callable via @mention only; never auto-routed. */
+  summonOnly?: boolean
 }
 
 // Free local tally model — served from bunker hot/ollama when 4TSSD is mounted.
@@ -27,7 +29,31 @@ export const SEATS: SeatDef[] = [
   { key: 'grok',     name: 'Grok',     provider: 'xAI',       model: 'grok-4.3',        cost: 'paid', bestFor: 'web retrieval, code, planning' },
   { key: 'gpt',      name: 'GPT',      provider: 'OpenAI',    model: 'gpt-4o',          cost: 'paid', bestFor: 'structured output, tool use' },
   { key: 'gemini',   name: 'Gemini',   provider: 'Google',    model: 'gemini-1.5-pro',  cost: 'paid', bestFor: 'long docs, summarization' },
+  {
+    key: 'fugu',
+    name: 'Fugu',
+    provider: 'Sakana',
+    model: 'fugu',
+    cost: 'paid',
+    bestFor: 'hard council calls — code review, research, multi-step reasoning',
+    summonOnly: true,
+  },
+  {
+    key: 'fugu-ultra',
+    name: 'Fugu Ultra',
+    provider: 'Sakana',
+    model: 'fugu-ultra',
+    cost: 'paid',
+    bestFor: 'largest tasks — Responses API + web search when agentic enabled',
+    summonOnly: true,
+  },
 ]
+
+export const SUMMON_ONLY_SEATS = new Set(SEATS.filter((s) => s.summonOnly).map((s) => s.key))
+
+export function isSummonOnlySeat(key: string): boolean {
+  return SUMMON_ONLY_SEATS.has(key)
+}
 
 export const seatByKey = (key: string): SeatDef | undefined =>
   SEATS.find((s) => s.key === key)

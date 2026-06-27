@@ -1,12 +1,13 @@
 {
   "name": "camelotai",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Multi-model AI boardroom — desktop app (Electron + Next.js)",
   "main": "electron/main.js",
   "scripts": {
     "dev": "node scripts/with-secrets.mjs next dev -p 20020",
     "electron": "electron .",
+    "council-bridge": "python3 scripts/council_bridge.py",
     "desktop": "node scripts/dev-desktop.mjs",
     "desktop:prod": "node scripts/prod-desktop.mjs",
     "smoke": "CAMELOT_SMOKE=1 node scripts/dev-desktop.mjs",

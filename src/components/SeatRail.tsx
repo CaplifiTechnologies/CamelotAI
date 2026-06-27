@@ -1,5 +1,6 @@
 'use client'
 
+import { isSummonOnlySeat } from '@/lib/seats'
 import { useBoardroomStore } from '@/store/useBoardroomStore'
 
 const DOT: Record<string, string> = {
@@ -23,7 +24,9 @@ export default function SeatRail() {
             className={`flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-900 text-sm ${
               seat.enabled ? '' : 'opacity-50'
             }`}
-            title={`${seat.provider} · ${seat.model}${seat.enabled ? '' : ' (disabled)'}`}
+            title={`${seat.provider} · ${seat.model}${
+              isSummonOnlySeat(seat.key) ? ' — summon with @fugu' : seat.enabled ? '' : ' (disabled)'
+            }`}
           >
             <button
               type="button"
@@ -48,6 +51,9 @@ export default function SeatRail() {
             />
             <span className={`flex-1 truncate ${seat.enabled ? 'text-zinc-300' : 'text-zinc-500'}`}>
               {seat.name}
+              {isSummonOnlySeat(seat.key) && (
+                <span className="ml-1 text-[10px] text-amber-500/90">guest</span>
+              )}
             </span>
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${

@@ -11,7 +11,11 @@ import { execFileSync } from 'node:child_process'
 import { spawn } from 'node:child_process'
 
 // envVar ← Keychain generic-password service name
-const SECRETS = [{ env: 'ANTHROPIC_API_KEY', service: 'ANTHROPIC_API_KEY' }]
+const SECRETS = [
+  { env: 'ANTHROPIC_API_KEY', service: 'ANTHROPIC_API_KEY' },
+  { env: 'XAI_API_KEY', service: 'XAI_API_KEY' },
+  { env: 'SAKANA_API_KEY', service: 'SAKANA_API_KEY' },
+]
 
 for (const { env, service } of SECRETS) {
   if (process.env[env]) continue // already set — respect an explicit override

@@ -27,9 +27,14 @@ const patch = (url: string, body: unknown) =>
 export const api = {
   health: () => fetch('/api/health').then((r) => r.json()),
 
-  loadMessages: (threadId?: string) =>
-    json<{ messages: any[] }>(fetch(`/api/messages${threadId ? `?threadId=${threadId}` : ''}`)),
-  saveMessage: (m: { seatKey: string; content: string; threadId?: string }) =>
+  loadMessages: (opts?: { threadId?: string; roomId?: string }) => {
+    const q = new URLSearchParams()
+    if (opts?.threadId) q.set('threadId', opts.threadId)
+    if (opts?.roomId) q.set('roomId', opts.roomId)
+    const qs = q.toString()
+    return json<{ messages: any[] }>(fetch(`/api/messages${qs ? `?${qs}` : ''}`))
+  },
+  saveMessage: (m: { seatKey: string; content: string; threadId?: string; roomId?: string }) =>
     json<{ message: any }>(post('/api/messages', m)).then((d) => d.message),
   editMessage: (id: string, content: string) =>
     json<{ message: any }>(patch('/api/messages', { id, content })).then((d) => d.message),
@@ -38,7 +43,14 @@ export const api = {
   askSeat: async (
     seat: string,
     history: Turn[],
-    opts?: { model?: string; cost?: 'local' | 'paid'; threadId?: string; agentTools?: boolean },
+    opts?: {
+      model?: string
+      cost?: 'local' | 'paid'
+      threadId?: string
+      agentTools?: boolean
+      systemOverride?: string
+      roomId?: string
+    },
   ): Promise<AskSeatResult> => {
     const res = await post('/api/chat', { seat, history, ...opts })
     const d = await json<{ message?: any; passed?: boolean; usage?: SeatUsage }>(res)
@@ -76,8 +88,79 @@ export const api = {
   // --- Onboarding -----------------------------------------------------------
   onboardingStatus: () => json<any>(fetch('/api/onboarding/status')),
   onboardingModels: () => json<{ bunker: boolean; models: any[] }>(fetch('/api/onboarding/models')),
-  saveSecret: (service: 'ANTHROPIC_API_KEY' | 'XAI_API_KEY' | 'ODYSSEUS_API_TOKEN', value: string) =>
+  saveSecret: (
+    service: 'ANTHROPIC_API_KEY' | 'XAI_API_KEY' | 'ODYSSEUS_API_TOKEN' | 'SAKANA_API_KEY',
+    value: string,
+  ) =>
     json<{ ok: boolean }>(post('/api/onboarding/secrets', { service, value })),
   onboardingAssist: (question: string, model?: string) =>
     json<{ answer: string }>(post('/api/onboarding/assist', { question, model })),
+
+  // --- Handoff pickup (AI HANDOFF SLOP watcher) ----------------------------
+  handoffPending: () =>
+    json<{ pending: boolean; pickup?: any }>(fetch('/api/handoff/pending')),
+  openHandoff: () =>
+    json<{ opened: boolean; messages?: any[]; usage?: SeatUsage; reason?: string }>(
+      post('/api/handoff/open', {}),
+    ),
+
+  // --- Rooms ----------------------------------------------------------------
+  listRooms: () => json<{ rooms: any[] }>(fetch('/api/rooms')).then((d) => d.rooms),
+  createRoom: (data: {
+    id?: string
+    name: string
+    counsel?: boolean
+    counselProject?: string
+    counselInboxId?: number
+    counselPlaybook?: string
+  }) => json<{ room: any }>(post('/api/rooms', data)).then((d) => d.room),
+  patchRoom: (id: string, fields: Record<string, unknown>) =>
+    json<{ room: any }>(patch('/api/rooms', { id, ...fields })).then((d) => d.room),
+
+  // --- Council (deterministic gate via Python sidecar) ----------------------
+  counselRoles: () => json<{ ok: boolean; roles: any[] }>(fetch('/api/counsel/roles')),
+  counselBootstrap: (inboxId: number) =>
+    json<any>(fetch(`/api/counsel/bootstrap?inbox=${inboxId}`)),
+  councilRegisterRoom: (roomId: string, project?: string, inboxId?: number) =>
+    json<any>(post('/api/council/room', { room_id: roomId, project, inbox_id: inboxId })),
+  councilOdinPull: (roomId: string, project?: string) =>
+    json<any>(post('/api/council/odin/pull', { room_id: roomId, project })),
+  councilProposals: (roomId: string) =>
+    json<{ items: any[] }>(fetch(`/api/council/proposals?room=${encodeURIComponent(roomId)}`)),
+  councilLedger: (roomId: string) =>
+    json<{ entries: any[] }>(fetch(`/api/council/ledger?room=${encodeURIComponent(roomId)}&limit=12`)),
+  councilPropose: (data: {
+    room_id: string
+    seat: string
+    type: string
+    summary: string
+    body?: string
+  }) => json<any>(post('/api/council/propose', data)),
+  councilResolve: (proposalId: number, approve: boolean) =>
+    json<any>(
+      post(approve ? '/api/council/approve' : '/api/council/deny', {
+        proposal_id: proposalId,
+        human_token: approve ? 'matt' : undefined,
+      }),
+    ),
+  councilInvite: (roomId: string, email: string, role: string) =>
+    json<any>(post('/api/council/invite', { room_id: roomId, email, role })),
+  councilPeerMode: (roomId: string, mode: string) =>
+    json<any>(post('/api/council/peer/mode', { room_id: roomId, mode })),
+  hbiWatch: (fingerprint?: string | null) =>
+    json<{
+      ok: boolean
+      changed: boolean
+      count: number
+      newCount: number
+      titles: string[]
+      fingerprint: string
+      path: string | null
+    }>(fetch(`/api/hbi/watch${fingerprint ? `?fingerprint=${fingerprint}` : ''}`)),
+
+  odysseusIngest: (data: {
+    project?: string
+    summary?: string
+    turns: { name?: string; seatKey?: string; content: string }[]
+  }) => json<any>(post('/api/odysseus/ingest', { ...data, source: 'camelot' })),
 }

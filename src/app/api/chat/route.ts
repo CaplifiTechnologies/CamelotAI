@@ -9,6 +9,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { askClaude, anthropicConfigured, type Turn } from '@/lib/providers/anthropic'
+import { fuguAgenticConfig } from '@/lib/fuguConfig'
+import { askFugu, fuguConfigured } from '@/lib/providers/fugu'
+import { fuguResponses } from '@/lib/providers/fuguAgentic'
 import { askGrok, grokConfigured } from '@/lib/providers/grok'
 import { askOllama } from '@/lib/providers/ollama'
 import { askOdysseus, odysseusConfigured } from '@/lib/providers/odysseus'
@@ -20,6 +23,16 @@ import { isPass } from '@/lib/orchestrator'
 export const runtime = 'nodejs'
 
 function systemFor(seatKey: string, seatName: string): string {
+  if (seatKey === 'fugu' || seatKey === 'fugu-ultra') {
+    return [
+      `You are ${seatName}, a guest orchestrator at the Camelot boardroom — summoned for`,
+      `hard problems only. You coordinate multiple frontier models behind the scenes.`,
+      `Speak as one concise voice. Odysseus runs local helm; Matt chairs this room.`,
+      `You are not a resident seat — do not claim local filesystem or tool access.`,
+      `If you genuinely have nothing to add, reply with exactly the word PASS`,
+      `(nothing else). To flag something urgent, begin with "INTERJECT:" and one sentence.`,
+    ].join(' ')
+  }
   if (seatKey === 'odysseus') {
     return [
       `You are ${seatName}, a local-first agent seat in the Camelot boardroom.`,
@@ -54,22 +67,36 @@ function systemFor(seatKey: string, seatName: string): string {
 export async function POST(req: Request) {
   // `model`/`cost` are optional client hints so dynamically-invited Ollama seats
   // (not in the static registry) are still callable.
-  const { seat, history, model, cost, threadId, agentTools } = (await req.json()) as {
-    seat: string
-    history: Turn[]
-    model?: string
-    cost?: 'local' | 'paid'
-    threadId?: string
-    agentTools?: boolean
-  }
+  const { seat: rawSeat, history, model, cost, threadId, agentTools, systemOverride, roomId } =
+    (await req.json()) as {
+      seat: string
+      history: Turn[]
+      model?: string
+      cost?: 'local' | 'paid'
+      threadId?: string
+      agentTools?: boolean
+      systemOverride?: string
+      roomId?: string
+    }
+  const seat = rawSeat.startsWith('counsel:') || rawSeat === 'odysseus-synthesis' ? 'odysseus' : rawSeat
   const useTools = agentTools !== false
   const def = seatByKey(seat)
-  const seatName = def?.name ?? seat
+  const displaySeat = rawSeat.startsWith('counsel:')
+    ? rawSeat.replace(/^counsel:/, '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : rawSeat === 'odysseus-synthesis'
+      ? 'Odysseus'
+      : (def?.name ?? rawSeat)
+  const seatName = displaySeat
   const turns: Turn[] = Array.isArray(history) ? history : []
   const effectiveCost = cost ?? def?.cost
   const effectiveModel = model ?? def?.model
   const isLocal =
-    effectiveCost === 'local' || seat === 'odysseus' || seat === 'qwen' || seat === 'local'
+    effectiveCost === 'local' ||
+    seat === 'odysseus' ||
+    seat === 'qwen' ||
+    seat === 'local' ||
+    rawSeat.startsWith('counsel:') ||
+    rawSeat === 'odysseus-synthesis'
 
   if (process.env.CAMELOT_DEV_LOG === '1' || process.env.NODE_ENV === 'development') {
     console.log('[chat]', {
@@ -94,7 +121,8 @@ export async function POST(req: Request) {
 
   let reply
   try {
-    const sys = systemFor(seat, seatName)
+    const base = systemFor(seat, seatName)
+    const sys = systemOverride?.trim() ? `${base}\n\n${systemOverride.trim()}` : base
     if (seat === 'odysseus') {
       if (!odysseusConfigured()) {
         return NextResponse.json(
@@ -126,6 +154,32 @@ export async function POST(req: Request) {
         )
       }
       reply = useTools ? await askClaudeWithTools(turns, sys) : await askClaude(turns, sys)
+    } else if (seat === 'fugu' || seat === 'fugu-ultra') {
+      if (!fuguConfigured()) {
+        return NextResponse.json(
+          {
+            error: `${seatName} is offline — no SAKANA_API_KEY. Create one at console.sakana.ai and save to Keychain.`,
+          },
+          { status: 503 },
+        )
+      }
+      const agentic = fuguAgenticConfig()
+      const model = seat === 'fugu-ultra' ? agentic.ultraModel : agentic.defaultModel
+      const useResponses = agentic.enabled && agentic.responsesApi && seat === 'fugu-ultra'
+      if (useResponses) {
+        const lastUser = [...turns].reverse().find((t) => t.role === 'user')
+        const prompt = lastUser?.content ?? turns.map((t) => `${t.role}: ${t.content}`).join('\n')
+        const res = await fuguResponses({
+          prompt,
+          instructions: sys,
+          model,
+          webSearch: agentic.webSearch,
+          reasoningEffort: 'xhigh',
+        })
+        reply = { content: res.content, usage: res.usage }
+      } else {
+        reply = await askFugu(turns, sys, { model })
+      }
     } else {
       return NextResponse.json({ error: `${seatName} is not wired in this build.` }, { status: 501 })
     }
@@ -142,7 +196,12 @@ export async function POST(req: Request) {
   }
 
   const message = await prisma.message.create({
-    data: { seatKey: seat, content: reply.content, threadId: threadId ?? null },
+    data: {
+      seatKey: rawSeat,
+      content: reply.content,
+      threadId: threadId ?? null,
+      roomId: roomId ?? null,
+    },
   })
   return NextResponse.json({ message, usage: reply.usage })
 }

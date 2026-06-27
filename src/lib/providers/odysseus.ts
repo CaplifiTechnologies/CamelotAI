@@ -31,6 +31,7 @@ const EXEC_FENCE_RE =
   /```(?:web_search|read_file|write_file|create_document|edit_document|update_document|bash|python)\s*\n[\s\S]*?```/gi
 const XML_TOOL_CALL_RE =
   /<(?:[\w]+:)?(?:tool_call|function_call)>[\s\S]*?<\/(?:[\w]+:)?(?:tool_call|function_call)>/gi
+const BARE_TOOL_CALL_RE = /<tool_call>[\s\S]*$/i
 
 export function odysseusConfigured(): boolean {
   return Boolean(process.env.ODYSSEUS_API_TOKEN || readKeychain('ODYSSEUS_API_TOKEN'))
@@ -65,6 +66,7 @@ function stripToolBlocks(text: string): string {
     .replace(TOOL_CALL_RE, '')
     .replace(EXEC_FENCE_RE, '')
     .replace(XML_TOOL_CALL_RE, '')
+    .replace(BARE_TOOL_CALL_RE, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
@@ -240,15 +242,25 @@ async function consumeAgentStream(res: Response): Promise<string> {
   return stripToolBlocks(raw)
 }
 
-async function askOdysseusAgent(sessionId: string, message: string): Promise<string> {
+type OdysseusChatOpts = {
+  mode?: 'agent' | 'chat'
+  allowBash?: boolean
+  allowWebSearch?: boolean
+}
+
+async function askOdysseusAgent(
+  sessionId: string,
+  message: string,
+  opts: OdysseusChatOpts = {},
+): Promise<string> {
   const form = new FormData()
   form.append('message', message)
   form.append('session', sessionId)
-  form.append('mode', 'agent')
+  form.append('mode', opts.mode ?? 'agent')
   form.append('preset_id', ODYSSEUS_PRESET_ID)
   form.append('use_rag', 'true')
-  form.append('allow_bash', 'true')
-  form.append('allow_web_search', 'true')
+  form.append('allow_bash', opts.allowBash === false ? 'false' : 'true')
+  form.append('allow_web_search', opts.allowWebSearch === false ? 'false' : 'true')
   form.append('workspace', os.homedir())
 
   const res = await fetch(`${ODYSSEUS_BASE_URL}/api/chat_stream`, {
@@ -271,10 +283,11 @@ export async function askOdysseus(
   history: Turn[],
   system: string,
   threadKey = 'main',
+  opts: OdysseusChatOpts = {},
 ): Promise<ProviderReply> {
   const userText = latestUserText(history)
   const bridge = tryFileBridge(userText)
-  if (bridge.handled) {
+  if (bridge.handled && opts.mode !== 'chat') {
     const content = bridge.content
     return {
       content,
@@ -284,7 +297,7 @@ export async function askOdysseus(
 
   const session = await ensureSession(threadKey)
   const message = formatMessage(history, system)
-  let content = await askOdysseusAgent(session, message)
+  let content = await askOdysseusAgent(session, message, opts)
 
   // qwen2.5 often narrates write_file without executing — fulfill via verified bridge.
   const fallback = tryFileBridge(userText)

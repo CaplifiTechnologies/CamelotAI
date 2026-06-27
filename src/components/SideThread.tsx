@@ -5,7 +5,7 @@ import { useBoardroomStore } from '@/store/useBoardroomStore'
 import { api } from '@/lib/client'
 import { routeMessage } from '@/lib/orchestrator'
 import { buildRouteContext, dispatchWithFallback, visibleEnabledSeats } from '@/lib/seatDispatch'
-import { isHiddenSeat } from '@/lib/seats'
+import { isHiddenSeat, isSummonOnlySeat } from '@/lib/seats'
 import { displayName } from '@/lib/display'
 
 interface Msg { id: string; seatKey: string; content: string; createdAt: string }
@@ -30,7 +30,7 @@ export default function SideThread({
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
-  const refresh = () => api.loadMessages(threadId).then((d) => setMsgs(d.messages)).catch(() => {})
+  const refresh = () => api.loadMessages({ threadId }).then((d) => setMsgs(d.messages)).catch(() => {})
   useEffect(() => {
     refresh()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,7 +54,7 @@ export default function SideThread({
       }
       if (mention) {
         const target = seats.find((s) => s.key === mention)
-        if (target && target.visible !== false && !target.enabled) {
+        if (target && target.visible !== false && !target.enabled && !isSummonOnlySeat(mention)) {
           setErr(`${target.name} is disabled — flip the toggle in the sidebar.`)
           return
         }

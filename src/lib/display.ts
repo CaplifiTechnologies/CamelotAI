@@ -11,5 +11,13 @@ const EXTRA: Record<string, string> = {
 }
 
 export function displayName(seatKey: string): string {
+  if (seatKey.startsWith('counsel:')) {
+    return seatKey
+      .slice('counsel:'.length)
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+  }
+  if (seatKey === 'odysseus-synthesis') return 'Odysseus'
+  if (seatKey === 'inbox') return 'Inbox'
   return EXTRA[seatKey] ?? seatByKey(seatKey)?.name ?? seatKey
 }
